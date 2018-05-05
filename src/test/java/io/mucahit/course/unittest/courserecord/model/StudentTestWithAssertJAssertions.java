@@ -52,44 +52,46 @@ public class StudentTestWithAssertJAssertions {
 
         final List<Student> students = List.of(ahmet, mehmet, canan, elif, hasan);
 
-        assertThat(students).as("Student's list")
+        assertThat(students)
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(5)
                 .contains(ahmet, mehmet)
                 .contains(ahmet, Index.atIndex(0))
-                .containsOnly(ahmet, mehmet, elif, hasan, canan)
+                .containsOnly(ahmet, mehmet, canan, hasan, elif)
                 .containsExactly(ahmet, mehmet, canan, elif, hasan)
-                .containsExactlyInAnyOrder(ahmet, mehmet, elif, hasan, canan)
+                .containsExactlyInAnyOrder(ahmet, mehmet, canan, hasan, elif)
         ;
 
-        assertThat(students).as("student's list")
+        assertThat(students)
                 .filteredOn(student -> student.getBirthDate().until(LocalDate.now(), ChronoUnit.YEARS) >= 25)
-                .containsOnly(ahmet, elif, mehmet, hasan)
+                .containsOnly(ahmet, mehmet, elif, hasan)
         ;
 
-        assertThat(students).as("student's list")
+        assertThat(students)
                 .filteredOn(new Condition<>() {
                     @Override
-                    public boolean matches(Student student) {
-                        return student.getBirthDate().until(LocalDate.now(), ChronoUnit.YEARS) >= 25;
+                    public boolean matches(Student value) {
+                        return value.getBirthDate().until(LocalDate.now(), ChronoUnit.YEARS) >= 25;
                     }
                 })
-                .containsOnly(ahmet, elif, mehmet, hasan)
+                .containsOnly(ahmet, mehmet, elif, hasan)
         ;
 
-        assertThat(students).as("student's list")
+        assertThat(students)
                 .filteredOn("birthDate", in(LocalDate.of(1990, 1, 1)))
+                .hasSize(2)
                 .containsOnly(ahmet, hasan)
         ;
 
-        assertThat(students).as("student's list")
+        assertThat(students).as("Student's List")
                 .extracting(Student::getName)
                 .filteredOn(name -> name.contains("e"))
                 .hasSize(2)
+                .containsOnly("Ahmet", "Mehmet")
         ;
 
-        assertThat(students).as("student's list")
+        assertThat(students)
                 .filteredOn(student -> student.getName().contains("e"))
                 .extracting(Student::getName, Student::getSurname)
                 .containsOnly(
@@ -109,84 +111,12 @@ public class StudentTestWithAssertJAssertions {
         canan.addCourse(lecturerCourseRecord103);
         canan.addCourse(lecturerCourseRecord105);
 
-        assertThat(students).as("student's list")
-                .filteredOn(student -> student.getName().equals("Ahmet") || student.getName().equals("Canan"))
-                .flatExtracting(Student::getStudentCourseRecords)
+        assertThat(students)
+                .filteredOn("name", in("Ahmet", "Canan"))
+                .flatExtracting(student -> student.getStudentCourseRecords())
+                .hasSize(5)
                 .filteredOn(studentCourseRecord -> studentCourseRecord.getLecturerCourseRecord().getCourse().getCode().equals("101"))
                 .hasSize(2)
-        ;
-
-    }
-
-    @Test
-    void anotherCreateStudentTest() {
-        final Department department = new Department();
-        final Student ahmet = new Student("id1", "Ahmet", "Yilmaz", LocalDate.of(1990, 1, 1));
-        ahmet.setDepartment(department);
-        final Student mehmet = new Student("id2", "Mehmet", "Yilmaz", LocalDate.of(1995, 1, 1));
-        mehmet.setDepartment(department);
-
-        assertThat(ahmet).as("Check student ahmet info")
-                .isNotNull()
-                .hasSameClassAs(mehmet)
-                .isExactlyInstanceOf(Student.class)
-                .isInstanceOf(UniversityMember.class)
-                .isNotEqualTo(mehmet)
-                .isEqualToComparingOnlyGivenFields(mehmet, "surname")
-                .isEqualToIgnoringGivenFields(mehmet, "id", "name", "birthDate")
-                .matches(student -> student.getBirthDate().getYear() == 1990)
-                .hasFieldOrProperty("name")
-                .hasNoNullFieldsOrProperties()
-                .extracting(Student::getName, Student::getSurname)
-                .containsOnly("Ahmet", "Yilmaz")
-        ;
-
-        StudentAssert.assertThat(mehmet).as("Student mehmet info check")
-                .hasName("Mehmet")
-        ;
-    }
-
-    @Test
-    void addCourseToStudentWithExceptionalScenarios() {
-
-        final Student student = new Student("id1", "Ahmet", "Yilmaz");
-
-        assertThatThrownBy(() -> student.addCourse(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Can't add course")
-                .hasStackTraceContaining("Student")
-        ;
-
-        assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> student.addCourse(null))
-                .withMessageContaining("Can't add course")
-                .withNoCause()
-        ;
-
-        assertThatIllegalArgumentException()
-                .isThrownBy(() -> student.addCourse(null))
-                .withMessageContaining("Can't add course")
-                .withNoCause()
-        ;
-
-        assertThatCode(() -> student.addCourse(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Can't add course")
-        ;
-
-        assertThatCode(() -> student.addCourse(new LecturerCourseRecord(new Course("101"), new Semester())))
-                .doesNotThrowAnyException();
-
-
-        assertThatThrownBy(() -> student.addGrade(null, null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasCauseExactlyInstanceOf(NoCourseFoundForStudentException.class)
-        ;
-
-        final Throwable throwable = catchThrowable(() -> student.addCourse(null));
-        assertThat(throwable)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Can't add course")
         ;
 
     }
